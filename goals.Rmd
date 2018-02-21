@@ -1,5 +1,5 @@
 ---
-title: "Goas"
+title: "Goals"
 author: "Jens Laufer"
 date: "16 Februar 2018"
 output:
@@ -8,13 +8,13 @@ output:
 ---
 
 
-```{r warning=FALSE}
+```{r message=FALSE,  echo=FALSE,  warning=FALSE, include=TRUE}
 library(tidyverse)
 ```
 
 
 
-```{r}
+```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE}
 ginf = read.csv('data/ginf.csv')
 
 events <- read.csv('data/events.csv') %>%
@@ -44,9 +44,25 @@ events$situation <- factor(events$situation, levels=c(1,2,3,4), labels=c('Open P
 
 ```
 
+```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, fig.width=20}
+events %>%
+  select(sixth, is_goal, country) %>%
+  na.omit() %>%
+  filter(is_goal == 'Goal') %>%
+  group_by(country) %>%
+  mutate(total=n()) %>%
+  group_by(sixth, country,total) %>%
+  summarise(n=n()) %>%
+  summarise(pct=round(n/total *100,0)) %>%
+  ggplot(aes(x=sixth, y=pct))+
+  geom_bar(stat='identity')+
+  facet_wrap(~country)
+  
+```
 
 
-```{r fig.width=20}
+
+```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, fig.width=20}
 events %>%
   select(is_goal, bodypart, country) %>%
   na.omit() %>%
@@ -65,7 +81,7 @@ events %>%
 
 
 
-```{r fig.width=20}
+```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, fig.width=20}
 events %>%
   select(is_goal, situation, country) %>%
   na.omit() %>%
@@ -84,7 +100,7 @@ events %>%
 
 
 
-```{r fig.width=20}
+```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
 events %>%
   select(is_goal, shot_place, country) %>%
   na.omit() %>%
@@ -102,7 +118,7 @@ events %>%
 ```
 
 
-```{r fig.width=20}
+```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, fig.width=20}
 events %>%
   select(is_goal, location, country) %>%
   na.omit() %>%
@@ -121,7 +137,7 @@ events %>%
 
 
 
-```{r fig.height=10, fig.width=15}
+```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, fig.height=10, fig.width=15}
 
 events %>%
   select(is_goal, shot_place, location) %>%

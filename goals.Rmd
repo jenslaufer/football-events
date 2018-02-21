@@ -1,0 +1,149 @@
+---
+title: "Goas"
+author: "Jens Laufer"
+date: "16 Februar 2018"
+output: html_document
+---
+
+
+```{r warning=FALSE}
+library(tidyverse)
+```
+
+
+
+```{r}
+ginf = read.csv('data/ginf.csv')
+
+events <- read.csv('data/events.csv') %>%
+              inner_join(ginf)
+
+events$event_type <- factor(events$event_type, levels=c(0,1,2,3,4,5,6,7,8,9,10,11), labels=c('Annoucement', 'Attempt','Corner','Foul', 'Yellow Card', 'Second Yellow Card', 'Red Card', 'Substitution', 'Free kick won', 'Offside', 'hand ball', 'Penalty conceded'))
+
+events$is_goal <- factor(events$is_goal, levels=c(0,1), labels=c('No Goal', 'Goal'))
+
+events$shot_place <- factor(events$shot_place, levels=c(1,2,3,4,5,6,7,8,9,10,11,12,13), labels=c('Bit Too High', 'Blocked', 'Bottom Left Corner', 'Bottom right corner', 'centre of goal', 'high and wide', 'hits the bar', 'misses to the left', 'misses to the right', 'Too high', 'top centre pf the goal', 'top left corner', 'top righ corner'))
+
+events$sixth <- cut(events$time,breaks = c(0, 15,30,45,60,75,90,120), labels = c('0-15','15-30','30-45', '45-60', '60-75', '75-90', '90-'))
+events$bodypart <- factor(events$bodypart, levels=c(1,2,3), labels=c('right foot', 'left foot', 'head'))
+
+events$location <- factor(events$location, levels=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19), labels=c('Attacking half', 'Defense half', 'Centre of the box', 'Left wing', 'right wing', 'difficult angle and long range', 'difficult angle on the left', 'difficult angle on the right', 'Left site of the box',  'Left site of the box of the siy yard box',  'Right site of the box',  'Right site of the box of the siy yard box', 'Very close range', 'Penalty Spot', 'Outsite The Box', 'long range', 'more than 35 yards', 'more than 40 yards', 'not recorded'))
+
+events$shot_outcome <- factor(events$shot_outcome, levels=c(1,2,3,4), labels=c('On target', 'off target', 'blocked', 'hit the bar'))
+
+events$event_type2 <- factor(events$event_type2, levels=c(12,13,14,15), labels=c('Key pass', 'Failed through ball', 'Sending off', 'Own goal'))
+
+events$side <- factor(events$side, levels=c(1,2), labels=c('Home', 'Away'))
+
+events$assist_method <- factor(events$assist_method, levels=c(0,1,2,3,4), labels=c('None', 'Pass','Cross', 'Headed pass', 'Through ball'))
+
+
+events$situation <- factor(events$situation, levels=c(1,2,3,4), labels=c('Open play', 'Set piece','Corner', 'Free kick'))
+
+```
+
+
+```{r fig.width=20}
+events %>%
+  select(time, is_goal, bodypart, country) %>%
+  filter(is_goal == 'Goal') %>%
+  group_by(time, is_goal, bodypart, country) %>%
+  summarise(n=n()) %>%
+  ggplot(aes(x=time, y=n, fill=bodypart)) +
+  geom_area(stat='identity') +
+  facet_wrap(~country)
+```
+
+
+```{r fig.width=20}
+events %>%
+  select(time, is_goal, situation, country) %>%
+  filter(is_goal == 'Goal') %>%
+  group_by(time, is_goal, situation, country) %>%
+  summarise(n=n()) %>%
+  ggplot(aes(x=time, y=n, fill=situation)) +
+  geom_area(stat='identity') +
+  facet_wrap(~country)
+```
+
+```{r fig.width=20}
+events %>%
+  select(country, sixth, is_goal, situation) %>%
+  filter(is_goal == 'Goal') %>%
+  group_by(country,sixth, is_goal, situation) %>%
+  summarise(n=n()) %>%
+  ggplot(aes(x=sixth, y=n, fill=situation)) +
+  geom_bar(stat='identity') +
+  facet_wrap(~country)
+```
+
+
+
+```{r fig.width=20}
+events %>%
+  select(time, is_goal, shot_place) %>%
+  filter(is_goal == 'Goal') %>%
+  group_by(time, is_goal, shot_place) %>%
+  summarise(n=n()) %>%
+  ggplot(aes(x=time, y=n, fill=shot_place)) +
+  geom_area(stat='identity') +
+  scale_x_continuous(breaks=seq(0,100,5)) +
+  scale_y_continuous(breaks=seq(0,1200,50))
+```
+
+
+```{r fig.width=20}
+events %>%
+  select(sixth, is_goal, shot_place) %>%
+  filter(is_goal == 'Goal') %>%
+  group_by(sixth, is_goal, shot_place) %>%
+  summarise(n=n()) %>%
+  ggplot(aes(x=sixth, y=n, fill=shot_place)) +
+  geom_bar(stat='identity') 
+```
+
+
+
+```{r fig.width=20}
+events %>%
+  select(time, is_goal, shot_place) %>%
+  filter(is_goal == 'No Goal') %>%
+  group_by(time, is_goal, shot_place) %>%
+  summarise(n=n()) %>%
+  ggplot(aes(x=time, y=n, fill=shot_place)) +
+  geom_area(stat='identity') 
+```
+
+```{r fig.width=20}
+events %>%
+  select(sixth, is_goal, shot_place) %>%
+  filter(is_goal == 'No Goal') %>%
+  group_by(sixth, is_goal, shot_place) %>%
+  summarise(n=n()) %>%
+  ggplot(aes(x=sixth, y=n, fill=shot_place)) +
+  geom_bar(stat='identity') 
+```
+
+
+```{r fig.height=100, fig.width=20}
+
+events %>%
+  select(is_goal, shot_place, location) %>%
+  filter(location != 'not recorded') %>%
+  na.omit() %>%
+  group_by(shot_place, location) %>%
+  mutate(total=n()) %>%
+  group_by(is_goal, shot_place, location, total) %>%
+  summarise(n=n()) %>%
+  mutate(location_shot_place=paste(location,shot_place, sep="/ "), pct=round(n/total * 100, 1)) %>%
+  filter(is_goal=='Goal') %>%
+  arrange(desc(pct)) %>%
+  ggplot(aes(x=reorder(location_shot_place, pct),y=pct)) +
+  geom_point(stat='identity', size=15, color='blue', alpha=0.6)+
+  geom_bar(stat='identity',  width=0.02, fill='blue', alpha=0.6)+
+  geom_text(aes(label=pct), color="white", size=5) +
+  theme(axis.text.y = element_text(size=15)) +
+  coord_flip()
+  
+```
+

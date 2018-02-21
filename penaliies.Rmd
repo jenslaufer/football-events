@@ -1,0 +1,78 @@
+---
+title: "Penalties in Football"
+output: html_notebook
+---
+
+This report is about penalities in football.
+
+   - Who is in a better position? Goalie or player?
+   - What makes a good penalty?
+   - Who score better better penalities England or Germany
+
+
+```{r warning=FALSE}
+library(tidyverse)
+```
+
+
+
+```{r}
+ginf = read.csv('data/ginf.csv')
+
+penalties <- read.csv('data/events.csv') %>%
+              filter(location == 14) %>%
+              inner_join(ginf)
+penalties$is_goal <- factor(penalties$is_goal, levels=c(0,1), labels=c('No Goal', 'Goal'))
+```
+
+
+
+```{r  warning=FALSE}
+penalties %>% 
+  mutate(total=n()) %>%
+  group_by(is_goal, country, total) %>%
+  summarise(n=n()) %>%
+  mutate(isGoal=as.factor(is_goal),pct=round(n/total*100,2)) %>%
+  ggplot(aes(x=c(''), y=pct, fill=isGoal)) +
+  geom_bar(stat='identity') +
+  scale_y_continuous(breaks = seq(0,100,5))
+```
+
+```{r fig.width=15, warning=FALSE}
+penalties %>% 
+  group_by(country) %>%
+  mutate(total=n()) %>%
+  group_by(is_goal, country, total) %>%
+  summarise(n=n()) %>%
+  mutate(isGoal=as.factor(is_goal),pct=round(n/total*100,2)) %>%
+  ggplot(aes(x=c(''), y=pct, fill=isGoal)) +
+  geom_bar(stat='identity', position='stack')+
+  scale_y_continuous(breaks = seq(0,100,5))+
+  facet_wrap(~country)
+```
+
+
+```{r fig.width=20, warning=FALSE}
+
+penalties %>% 
+  group_by(shot_place) %>%
+  mutate(total=n()) %>%
+  group_by(is_goal, shot_place, total) %>%
+  summarise(n=n()) %>%
+  mutate(isGoal=as.factor(is_goal),pct=round(n/total*100,2)) %>%
+  ggplot() +
+  geom_bar(aes(x=c(''),y=pct, fill=isGoal),stat='identity')+
+  scale_y_continuous(breaks = seq(0,100,5))+
+  facet_wrap(~shot_place)
+```
+
+
+```{r}
+ggplot() +
+  geom_tile(x=1,y=1, width=10, height=10, fill='blue') +
+  geom_tile(x=2,y=1, width=10, height=10, fill='red') 
+  
+```
+
+
+

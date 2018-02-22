@@ -12,13 +12,33 @@ output:
 library(tidyverse)
 ```
 
+```{r}
+root <-  '../data'
+
+data.zip.file <-  paste(root, '/events.zip', sep='')
+
+events.file <-  paste(root, '/events.csv', sep='')
+ginf.file <-  paste(root, '/ginf.csv', sep='')
+
+
+if(!file.exists(ginf.file)){
+    res <- tryCatch(download.file('https://s3.eu-central-1.amazonaws.com/datasets-zrbfhr74383/football-events.zip',
+                              destfile=data.zip.file,
+                              method="auto"),
+                error=function(e) 1)
+    unzip(data.zip.file, exdir=root)
+}
+
+
+ginf  <-  read.csv(ginf.file)
+
+events <- read.csv(events.file) %>%
+              inner_join(ginf)
+```
+
 
 
 ```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE}
-ginf = read.csv('data/ginf.csv')
-
-events <- read.csv('data/events.csv') %>%
-              inner_join(ginf)
 
 events$event_type <- factor(events$event_type, levels=c(0,1,2,3,4,5,6,7,8,9,10,11), labels=c('Annoucement', 'Attempt','Corner','Foul', 'Yellow Card', 'Second Yellow Card', 'Red Card', 'Substitution', 'Free kick won', 'Offside', 'Hand Ball', 'Penalty Conceded'))
 

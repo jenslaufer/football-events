@@ -1,0 +1,83 @@
+
+---
+title: "Substitutions"
+output: html_notebook
+---
+
+```{r message=FALSE,  echo=FALSE,  warning=FALSE, include=TRUE}
+library(tidyverse)
+```
+
+```{r}
+root <-  '../data'
+
+data.zip.file <-  paste(root, '/events.zip', sep='')
+
+events.file <-  paste(root, '/events.csv', sep='')
+ginf.file <-  paste(root, '/ginf.csv', sep='')
+
+
+if(!file.exists(ginf.file)){
+    res <- tryCatch(download.file('https://s3.eu-central-1.amazonaws.com/datasets-zrbfhr74383/football-events.zip',
+                              destfile=data.zip.file,
+                              method="auto"),
+                error=function(e) 1)
+    unzip(data.zip.file, exdir=root)
+}
+
+
+ginf  <-  read.csv(ginf.file)
+
+events <- read.csv(events.file) %>%
+              inner_join(ginf)
+```
+
+
+
+```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE}
+
+events$event_type <- factor(events$event_type, levels=c(0,1,2,3,4,5,6,7,8,9,10,11), labels=c('Annoucement', 'Attempt','Corner','Foul', 'Yellow Card', 'Second Yellow Card', 'Red Card', 'Substitution', 'Free kick won', 'Offside', 'Hand Ball', 'Penalty Conceded'))
+
+events$is_goal <- factor(events$is_goal, levels=c(0,1), labels=c('No Goal', 'Goal'))
+
+events$shot_place <- factor(events$shot_place, levels=c(1,2,3,4,5,6,7,8,9,10,11,12,13), labels=c('Bit Too High', 'Blocked', 'Bottom Left Corner', 'Bottom Right Corner', 'Centre Of Goal', 'High And Wide', 'Hits The Bar', 'Misses To The left', 'Misses To The Right', 'Too high', 'Top Centre Of The Goal', 'Top Left Corner', 'Top Right Corner'))
+
+events$sixth <- cut(events$time,breaks = c(0, 15,30,45,60,75,90,120), labels = c('0-15','15-30','30-45', '45-60', '60-75', '75-90', '90-'))
+events$bodypart <- factor(events$bodypart, levels=c(1,2,3), labels=c('Right Foot', 'Left Foot', 'Head'))
+
+events$location <- factor(events$location, levels=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19), labels=c('Attacking half', 'Defense half', 'Centre of the box', 'Left wing', 'right wing', 'difficult angle and long range', 'difficult angle on the left', 'difficult angle on the right', 'Left Site Of The box',  'Left Site Of The Six Yard Box',  'Right Site Of The Box',  'Right Site Of The Six Yard Box', 'Very close range', 'Penalty Spot', 'Outsite The Box', 'long range', 'More Than 35 yards', 'More than 40 yards', 'not recorded'))
+
+events$shot_outcome <- factor(events$shot_outcome, levels=c(1,2,3,4), labels=c('On target', 'off target', 'blocked', 'hit the bar'))
+
+events$event_type2 <- factor(events$event_type2, levels=c(12,13,14,15), labels=c('Key pass', 'Failed Through ball', 'Sending Off', 'Own Goal'))
+
+events$side <- factor(events$side, levels=c(1,2), labels=c('Home', 'Away'))
+
+events$assist_method <- factor(events$assist_method, levels=c(0,1,2,3,4), labels=c('None', 'Pass','Cross', 'Headed Pass', 'Through Ball'))
+
+
+events$situation <- factor(events$situation, levels=c(1,2,3,4), labels=c('Open Play', 'Set Piece','Corner', 'Free Kick'))
+
+```
+
+
+```{r}
+substitutions <- events %>%
+                  filter(event_type == 'Substitution')
+```
+
+```{r}
+goals <- events %>%
+           filter(is_goal == 'Goal')
+```
+
+```{r}
+joker <- substitutions %>%
+            inner_join(goals, c("player_in" = "player")) %>%
+            select(time.x, player_in) %>%
+            distinct(time.x, player_in) %>%
+            group_by(player_in) %>%
+            summarize(n=n())
+```
+
+

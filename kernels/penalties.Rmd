@@ -67,8 +67,7 @@ events$situation <- factor(events$situation, levels=c(1,2,3,4), labels=c('Open P
 
 ```{r}
 penalties <- events %>%
-              filter(location == 14)
-penalties$is_goal <- factor(penalties$is_goal, levels=c(0,1), labels=c('No Goal', 'Goal'))
+              filter(location == 'Penalty Spot')
 ```
 
 

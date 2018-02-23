@@ -61,3 +61,49 @@ events$assist_method <- factor(events$assist_method, levels=c(0,1,2,3,4), labels
 events$situation <- factor(events$situation, levels=c(1,2,3,4), labels=c('Open Play', 'Set Piece','Corner', 'Free Kick'))
 
 ```
+
+
+
+```{r}
+players <- events %>%
+  select(player, is_goal, event_type, country) %>%
+  na.omit() %>%
+  filter(event_type == 'Attempt') %>%
+  group_by(player, event_type, country) %>%
+  mutate(num_attempts=n()) %>%
+  filter(is_goal == 'Goal') %>%
+  group_by(player, is_goal, event_type, num_attempts, country) %>%
+  summarize(num_goals=n()) %>%
+  mutate(goal_attempt_ratio=round(num_goals/num_attempts  * 100,1)) 
+```
+
+
+
+
+```{r fig.height=15, fig.width=20}
+
+players %>%
+  ggplot(aes(x=num_attempts, y=goal_attempt_ratio)) +
+  geom_point(aes(color=country),stat='identity',  size=3) + 
+  geom_text(data=subset(players, num_attempts >= 250), aes(label=player),hjust=0,vjust=1) +
+  scale_x_continuous(limits = c(250,1250)) +
+  scale_y_continuous(limits=c(12,27)) +
+  facet_wrap(~country)
+
+
+```
+
+
+```{r fig.height=15, fig.width=20}
+
+players %>%
+  ggplot(aes(x=num_goals, y=goal_attempt_ratio)) +
+  geom_point(aes(color=country),stat='identity',  size=3) + 
+  geom_text(data=subset(players, num_goals >= 50), aes(label=player),hjust=0,vjust=1) +
+  scale_x_continuous(limits = c(50,250)) +
+  scale_y_continuous(limits=c(12,23)) +
+  facet_wrap(~country)
+
+
+```
+

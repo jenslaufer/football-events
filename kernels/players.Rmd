@@ -66,15 +66,37 @@ events$situation <- factor(events$situation, levels=c(1,2,3,4), labels=c('Open P
 
 ```{r}
 players <- events %>%
-  select(player, is_goal, event_type, country) %>%
-  na.omit() %>%
   filter(event_type == 'Attempt') %>%
-  group_by(player, event_type, country) %>%
+  select(player, is_goal, country) %>%
+  na.omit() %>%
+  group_by(player, country) %>%
   mutate(num_attempts=n()) %>%
   filter(is_goal == 'Goal') %>%
-  group_by(player, is_goal, event_type, num_attempts, country) %>%
+  group_by(player, country, num_attempts) %>%
   summarize(num_goals=n()) %>%
   mutate(goal_attempt_ratio=round(num_goals/num_attempts  * 100,1)) 
+```
+
+
+
+```{r}
+assisting_player <- events %>%
+  filter(event_type == 'Attempt') %>%
+  select(player2, country) %>%
+  na.omit() %>%
+  group_by(player2, country) %>%
+  summarize(num_assists=n()) 
+```
+
+```{r}
+pairs <- events %>%
+  filter(event_type == 'Attempt') %>%
+  select(player,player2, is_goal) %>%
+  na.omit() %>%
+  mutate(pair=paste(player2, player,sep='->')) %>%
+  group_by(pair) %>%
+  summarize(num_attempts=n()) %>%
+  arrange(desc(num_attempts))
 ```
 
 
@@ -99,11 +121,37 @@ players %>%
 players %>%
   ggplot(aes(x=num_goals, y=goal_attempt_ratio)) +
   geom_point(aes(color=country),stat='identity',  size=3) + 
-  geom_text(data=subset(players, num_goals >= 50), aes(label=player),hjust=0,vjust=1) +
-  scale_x_continuous(limits = c(50,250)) +
-  scale_y_continuous(limits=c(12,23)) +
+  geom_text(data=subset(players, num_goals >= 30), aes(label=player),hjust=0,vjust=1) +
+  scale_x_continuous(limits = c(30,250)) +
+  scale_y_continuous(limits=c(12,34)) +
   facet_wrap(~country)
 
 
 ```
 
+```{r}
+
+```
+
+
+```{r fig.height=15, fig.width=20}
+
+assisting_player %>%
+  arrange(desc(num_assists)) %>%
+  head(60) %>%
+  ggplot(aes(x=reorder(player2,num_assists), y=num_assists, fill=country)) +
+  geom_bar(stat='identity') +
+  coord_flip() 
+
+```
+
+```{r fig.height=15, fig.width=20}
+
+pairs %>%
+  filter(num_attempts>20) %>%
+  arrange(desc(num_attempts)) %>%
+  ggplot(aes(x=reorder(pair,num_attempts), y=num_attempts)) +
+  geom_bar(stat='identity') +
+  coord_flip() 
+
+```

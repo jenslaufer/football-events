@@ -91,12 +91,15 @@ assisting_player <- events %>%
 ```{r}
 pairs <- events %>%
   filter(event_type == 'Attempt') %>%
-  select(player,player2, is_goal) %>%
+  select(player, player2, is_goal) %>%
   na.omit() %>%
   mutate(pair=paste(player2, player,sep='->')) %>%
   group_by(pair) %>%
-  summarize(num_attempts=n()) %>%
-  arrange(desc(num_attempts))
+  mutate(num_attempts=n()) %>%
+  arrange(desc(num_attempts)) %>%
+  filter(is_goal == 'Goal') %>%
+  group_by(pair, num_goals, num_attempts) %>%
+  summarise(goal_attempt_ratio=round(num_goals/num_attempts  * 100,1)) 
 ```
 
 
@@ -132,7 +135,11 @@ players %>%
 ```{r}
 
 ```
-
+```{r}
+pairs %>%
+  arrange(desc(num_attempts), desc(goal_attempt_ratio))
+```
+ 
 
 ```{r fig.height=15, fig.width=20}
 
@@ -144,14 +151,13 @@ assisting_player %>%
   coord_flip() 
 
 ```
-
 ```{r fig.height=15, fig.width=20}
 
 pairs %>%
-  filter(num_attempts>20) %>%
-  arrange(desc(num_attempts)) %>%
-  ggplot(aes(x=reorder(pair,num_attempts), y=num_attempts)) +
-  geom_bar(stat='identity') +
-  coord_flip() 
+  filter(num_attempts > 40) %>%
+  ggplot(aes(x=num_attempts, y=goal_attempt_ratio)) +
+  geom_point(stat='identity',  size=3) + 
+  geom_text( aes(label=pair),hjust=0,vjust=1) 
+
 
 ```

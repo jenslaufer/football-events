@@ -1,16 +1,20 @@
 ---
-title: "Players"
+title: "Football Events: Top Players"
 author: "Jens Laufer"
-date: "22 Februar 2018"
-output: html_document
+date: "01/03/2018"
+output:
+  prettydoc::html_pretty:
+    toc: true
+    theme: architect
+
+
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(fig.width=15, fig.height=10, echo = TRUE, message = TRUE, warning = FALSE)
 ```
 
-
-```{r message=FALSE,  echo=FALSE,  warning=FALSE, include=TRUE}
+```{r}
 library(tidyverse)
 ```
 
@@ -23,7 +27,7 @@ events.file <-  paste(root, '/events.csv', sep='')
 ginf.file <-  paste(root, '/ginf.csv', sep='')
 
 
-if(!file.exists(ginf.file)){
+if(!file.exists(events.file)){
     res <- tryCatch(download.file('https://s3.eu-central-1.amazonaws.com/datasets-zrbfhr74383/football-events.zip',
                               destfile=data.zip.file,
                               method="auto"),
@@ -32,9 +36,10 @@ if(!file.exists(ginf.file)){
 }
 
 
-ginf  <-  read_csv(ginf.file)
+ginf  <-  as_tibble(read_csv(ginf.file))
 
-events <- read_csv(events.file) %>%
+events <- as_tibble(read_csv(events.file))
+events <- events %>%
               inner_join(ginf)
 ```
 
@@ -82,86 +87,86 @@ players <- events %>%
 ```
 
 
+1. Preface
+----------------
+
+
+Millions of people are fascinated about football worldwide. 
+
+
+2. Goals
+--------
+
+
+### 2.1 Positions ###
+
+
+3. Top Attackers
+----------------
+
 
 ```{r}
-assisting_player <- events %>%
+
+players %>%
+  ggplot(aes(x=num_goals, y=num_attempts)) +
+  geom_point(aes(color=country),stat='identity', size=4) + 
+  geom_text(aes(label=player), hjust=0.5,vjust=-0.6, size=8) +
+  scale_x_continuous(limit=c(73,205), breaks = seq(0,500,5)) +
+  scale_y_continuous(limit=c(400,1210), breaks=seq(0,2000,50)) +
+  labs(x='Number of Goals', y='Number Of Attempts', colour='Country', title='Total number of goals/number of attempts of top players across european top leagues 2011-2017') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"), axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold"),  plot.title=element_text(size=20, face='bold'))
+
+
+top_goalgetters <-(players %>%
+  filter(num_goals > 72 & num_attempts > 400))$player
+
+
+```
+
+
+
+```{r}
+assisting_players <- events %>%
   filter(event_type == 'Attempt') %>%
-  select(player2, country) %>%
+  select(player2, is_goal, country) %>%
   na.omit() %>%
   group_by(player2, country) %>%
-  summarize(num_assists=n()) 
-```
-
-```{r}
-pairs <- events %>%
-  filter(event_type == 'Attempt') %>%
-  select(player, player2, is_goal) %>%
-  na.omit() %>%
-  mutate(pair=paste(player2, player,sep='->')) %>%
-  group_by(pair) %>%
-  mutate(num_attempts=n()) %>%
-  arrange(desc(num_attempts)) %>%
+  mutate(num_created_attempts=n()) %>%
   filter(is_goal == 'Goal') %>%
-  group_by(pair, num_goals, num_attempts) %>%
-  summarise(goal_attempt_ratio=round(num_goals/num_attempts  * 100,1)) 
+  group_by(player2, country, num_created_attempts) %>%
+  summarize(num_goals=n()) %>%
+  mutate(goal_attempt_ratio=round(num_goals/num_created_attempts  * 100,1)) 
 ```
+
 
 
 
 
 ```{r}
 
-players %>%
-  ggplot(aes(x=num_attempts, y=goal_attempt_ratio)) +
-  geom_point(aes(color=country),stat='identity',  size=3) + 
-  geom_text(data=subset(players, num_attempts >= 250), aes(label=player),hjust=0,vjust=1) +
-  scale_x_continuous(limits = c(250,1250)) +
-  scale_y_continuous(limits=c(12,27)) +
-  facet_wrap(~country)
+assisting_players %>%
+  ggplot(aes(x=num_goals, y=num_created_attempts)) +
+  geom_point(aes(color=country),stat='identity') + 
+  geom_text(aes(label=player2), hjust=0.5,vjust=-0.6, size=8) +
+  scale_x_continuous(limit=c(33,77), breaks = seq(0,100,5)) +
+  scale_y_continuous(limit=c(310,420), breaks=seq(0,500,20)) +
+  labs(y='Number of assisted attempts', x='Number of assisted goals', colour='Country', size='Number Of Attempts', title='Total number of assisted Attemps/assisted goals of top players across european top leagues 2011-2017') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"), axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold"),  plot.title=element_text(size=20, face='bold'))
 
+top_assists <-(assisting_players %>%
+  filter(num_goals > 32 & num_created_attempts > 310))$player2
 
 ```
 
 
 ```{r}
-
-players %>%
-  ggplot(aes(x=num_goals, y=goal_attempt_ratio)) +
-  geom_point(aes(color=country),stat='identity',  size=3) + 
-  geom_text(data=subset(players, num_goals >= 30), aes(label=player),hjust=0,vjust=1) +
-  scale_x_continuous(limits = c(30,250)) +
-  scale_y_continuous(limits=c(12,34)) +
-  facet_wrap(~country)
-
-
+top_attackers <- c(as.character(top_goalgetters), as.character(top_assists))
+top_attackers
 ```
 
-```{r}
-
-```
-```{r}
-pairs %>%
-  arrange(desc(num_attempts), desc(goal_attempt_ratio))
-```
- 
-
-```{r}
-
-assisting_player %>%
-  arrange(desc(num_assists)) %>%
-  head(60) %>%
-  ggplot(aes(x=reorder(player2,num_assists), y=num_assists, fill=country)) +
-  geom_bar(stat='identity') +
-  coord_flip() 
-
-```
-```{r}
-
-pairs %>%
-  filter(num_attempts > 40) %>%
-  ggplot(aes(x=num_attempts, y=goal_attempt_ratio)) +
-  geom_point(stat='identity',  size=3) + 
-  geom_text( aes(label=pair),hjust=0,vjust=1) 
 
 
-```

@@ -9,6 +9,12 @@ This report is about penalities in football.
    - What makes a good penalty?
    - Who score better better penalities England or Germany
 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=15, fig.height=10, echo = TRUE, message = TRUE, warning = FALSE)
+```
+
+
 ```{r message=FALSE,  echo=FALSE,  warning=FALSE, include=TRUE}
 library(tidyverse)
 ```
@@ -39,7 +45,7 @@ events <- read.csv(events.file) %>%
 
 
 
-```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE}
+```{r}
 
 events$event_type <- factor(events$event_type, levels=c(0,1,2,3,4,5,6,7,8,9,10,11), labels=c('Annoucement', 'Attempt','Corner','Foul', 'Yellow Card', 'Second Yellow Card', 'Red Card', 'Substitution', 'Free kick won', 'Offside', 'Hand Ball', 'Penalty Conceded'))
 
@@ -72,7 +78,7 @@ penalties <- events %>%
 
 
 
-```{r  warning=FALSE}
+```{r}
 penalties %>% 
   mutate(total=n()) %>%
   group_by(is_goal, country, total) %>%
@@ -83,7 +89,7 @@ penalties %>%
   scale_y_continuous(breaks = seq(0,100,5))
 ```
 
-```{r fig.width=15, warning=FALSE}
+```{r}
 penalties %>% 
   group_by(country) %>%
   mutate(total=n()) %>%
@@ -97,7 +103,7 @@ penalties %>%
 ```
 
 
-```{r fig.width=20, warning=FALSE}
+```{r}
 
 penalties %>% 
   group_by(shot_place) %>%

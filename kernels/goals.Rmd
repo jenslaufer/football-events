@@ -8,7 +8,11 @@ output:
 ---
 
 
-```{r message=FALSE,  echo=FALSE,  warning=FALSE, include=TRUE}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=15, fig.height=10, echo = TRUE, message = TRUE, warning = FALSE)
+```
+
+```{r}
 library(tidyverse)
 ```
 
@@ -38,7 +42,7 @@ events <- read.csv(events.file) %>%
 
 
 
-```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE}
+```{r}
 
 events$event_type <- factor(events$event_type, levels=c(0,1,2,3,4,5,6,7,8,9,10,11), labels=c('Annoucement', 'Attempt','Corner','Foul', 'Yellow Card', 'Second Yellow Card', 'Red Card', 'Substitution', 'Free kick won', 'Offside', 'Hand Ball', 'Penalty Conceded'))
 
@@ -64,7 +68,7 @@ events$situation <- factor(events$situation, levels=c(1,2,3,4), labels=c('Open P
 
 ```
 
-```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, fig.width=20}
+```{r}
 events %>%
   select(sixth, is_goal, country) %>%
   na.omit() %>%
@@ -82,7 +86,7 @@ events %>%
 
 
 
-```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, fig.width=20}
+```{r}
 events %>%
   select(is_goal, bodypart, country) %>%
   na.omit() %>%
@@ -101,7 +105,7 @@ events %>%
 
 
 
-```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, fig.width=20}
+```{r}
 events %>%
   select(is_goal, situation, country) %>%
   na.omit() %>%
@@ -120,7 +124,7 @@ events %>%
 
 
 
-```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+```{r}
 events %>%
   select(is_goal, shot_place, country) %>%
   na.omit() %>%
@@ -138,7 +142,7 @@ events %>%
 ```
 
 
-```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, fig.width=20}
+```{r}
 events %>%
   select(is_goal, location, country) %>%
   na.omit() %>%
@@ -157,7 +161,7 @@ events %>%
 
 
 
-```{r message=FALSE,  echo=FALSE, warning=FALSE, include=TRUE, fig.height=10, fig.width=15}
+```{r}
 
 events %>%
   select(is_goal, shot_place, location) %>%
